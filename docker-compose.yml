@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:latest
+    image: postgres:15
     env_file:
       - .env                         # Загружаем все переменные из .env
     environment:
@@ -17,7 +17,7 @@ services:
   app:
     build: .
     ports:
-      - "8080:80"
+      - "8081:80"
     env_file:
       - .env                         # Переменные для PHP-приложения
     environment:
