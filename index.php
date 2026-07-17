@@ -1,7 +1,16 @@
 <?php
+// Включаем отображение ошибок для разработки (закомментировать в продакшене)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
 require_once 'config.php';      // Подключение к БД (определяет $pdo)
-require_once 'auth.php';        // Функции аутентификации
+require_once 'auth.php';        // Функции аутентификации и логирования
+
+// Проверка, что $pdo определён
+if (!isset($pdo)) {
+    die('Ошибка: подключение к базе данных не установлено.');
+}
 
 // Проверка авторизации
 if (!isAuthenticated()) {
@@ -33,7 +42,7 @@ function generateCalendar($selectedDate) {
 // ---------- Обработка POST-запросов ----------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    global $pdo;   // $pdo определён в config.php
+    global $pdo;
     try {
         switch ($action) {
             case 'add':
@@ -96,7 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: " . $_SERVER['PHP_SELF'] . "?date=" . urlencode($redirectDate));
         exit();
     } catch (Exception $e) {
-        logAction('ERROR', ['message' => $e->getMessage()]);
+        // Логируем ошибку, если функция logAction доступна
+        if (function_exists('logAction')) {
+            logAction('ERROR', ['message' => $e->getMessage()]);
+        }
         die("Ошибка: " . $e->getMessage());
     }
 }
