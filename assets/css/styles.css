@@ -1,0 +1,27 @@
+/* Дополнительные стили для календаря и карточек встреч */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.calendar-day {
+    text-align: center;
+    cursor: pointer;
+    background: #f8f9fa;
+    transition: background 0.2s;
+}
+
+.calendar-day:hover {
+    background: #e9ecef;
+}
+
+.calendar-day.active {
+    background: #0d6efd;
+    color: white;
+    font-weight: bold;
+}
+
+.meeting-card {
+    border-left: 4px solid #0d6efd;
+}
