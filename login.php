@@ -17,15 +17,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($username && $password) {
         $user = getUserByUsername($username);
-        if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user'] = $user;
-            logAction('LOGIN_SUCCESS');
-            header('Location: index.php');
-            exit();
+        if ($user) {
+            // Проверка пароля: поддерживаем оба метода
+            $valid = false;
+            // 1) Если пароль хеширован через password_hash
+            if (password_verify($password, $user['password'])) {
+                $valid = true;
+            }
+            // 2) Если пароль хеширован через MD5 (для совместимости со старыми данными)
+            if (!$valid && md5($password) === $user['password']) {
+                $valid = true;
+                // Опционально: обновить хеш на password_hash
+                // $stmt = $pdo->prepare("UPDATE users SET password = :hash WHERE id = :id");
+                // $stmt->execute(['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $user['id']]);
+            }
+
+            if ($valid) {
+                $_SESSION['user'] = $user;
+                // Логируем успешный вход (если таблица существует)
+                try {
+                    logAction('LOGIN_SUCCESS');
+                } catch (Exception $e) {
+                    // Игнорируем ошибку логирования
+                }
+                header('Location: index.php');
+                exit();
+            }
         }
     }
     $error = 'Неверные учётные данные';
-    logAction('LOGIN_FAILED', ['username' => $username]);
+    // Логируем неудачную попытку (если таблица существует)
+    try {
+        logAction('LOGIN_FAILED', ['username' => $username]);
+    } catch (Exception $e) {
+        // Игнорируем ошибку логирования
+    }
 }
 ?>
 <!DOCTYPE html>
