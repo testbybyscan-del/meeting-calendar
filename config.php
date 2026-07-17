@@ -3,6 +3,7 @@
  * Конфигурационный файл
  * - Загружает переменные из .env (если файл существует)
  * - Создаёт PDO-соединение с PostgreSQL
+ * - Предоставляет функцию логирования
  */
 
 /**
@@ -50,4 +51,21 @@ try {
     $pdo->exec("SET NAMES 'UTF8'");
 } catch (PDOException $e) {
     die("Ошибка подключения к базе данных: " . $e->getMessage());
+}
+
+/**
+ * Функция для логирования действий
+ * @param string $action Тип действия (ADD_MEETING, EDIT_MEETING, DELETE_MEETING, ERROR, etc.)
+ * @param array $data Данные для логирования
+ */
+function logAction($action, $data = []) {
+    // Путь к файлу логов
+    $logFile = __DIR__ . '/logs/app.log';
+    // Если папка logs не существует, создаём
+    if (!is_dir(dirname($logFile))) {
+        mkdir(dirname($logFile), 0755, true);
+    }
+    $timestamp = date('Y-m-d H:i:s');
+    $message = "[$timestamp] $action: " . json_encode($data, JSON_UNESCAPED_UNICODE) . PHP_EOL;
+    file_put_contents($logFile, $message, FILE_APPEND | LOCK_EX);
 }
