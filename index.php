@@ -1,12 +1,15 @@
 <?php
 session_start();
-require_once 'auth.php';
+require_once 'config.php';      // Подключение к БД (определяет $pdo)
+require_once 'auth.php';        // Функции аутентификации
 
+// Проверка авторизации
 if (!isAuthenticated()) {
     header('Location: login.php');
     exit();
 }
 
+// ---------- Вспомогательные функции ----------
 function dateToDb($dateStr) {
     $dt = DateTime::createFromFormat('d.m.Y', $dateStr);
     return $dt ? $dt->format('Y-m-d') : null;
@@ -27,9 +30,10 @@ function generateCalendar($selectedDate) {
     return $calendar;
 }
 
+// ---------- Обработка POST-запросов ----------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    global $pdo;
+    global $pdo;   // $pdo определён в config.php
     try {
         switch ($action) {
             case 'add':
@@ -51,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 logAction('ADD_MEETING', ['id' => $pdo->lastInsertId(), 'date' => $date, 'time' => $time]);
                 break;
+
             case 'edit':
                 $id       = (int)$_POST['id'];
                 $date     = dateToDb($_POST['date']);
@@ -74,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 logAction('EDIT_MEETING', ['id' => $id]);
                 break;
+
             case 'delete':
                 $id = (int)$_POST['id'];
                 $stmt = $pdo->prepare("SELECT * FROM meetings WHERE id = :id");
@@ -95,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ---------- Основная логика ----------
 $selectedDate = $_GET['date'] ?? date('d.m.Y');
 $selectedDateDb = dateToDb($selectedDate);
 $stmt = $pdo->prepare("SELECT * FROM meetings WHERE date = :date ORDER BY time");
@@ -189,6 +196,7 @@ $calendar = generateCalendar($selectedDate);
         </div>
     </div>
 
+    <!-- Модальное окно -->
     <div class="modal fade" id="meetingModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
